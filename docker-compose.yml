@@ -1,0 +1,10 @@
+version: '3.3'
+services:
+    nginx-rtmp-server:
+        ports:
+            - '80:80'
+            - '1935:1935'
+        container_name: rtmp-server
+        volumes:
+            - './nginx_rtmp_hls.conf:/usr/local/nginx/conf/nginx.conf'
+        image: 'mparvin/nginx-rtmp-server:latest'
