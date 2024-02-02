@@ -24,6 +24,22 @@ Then, run the server with the custom configuration:
 docker run -d -p 80:80 -p 1935:1935 --name rtmp-server -v ./nginx_rtmp_hls.conf:/usr/local/nginx/conf/nginx.conf mparvin/nginx-rtmp-server:latest
 ```
 
+## Build
+
+If you want to build the Docker image locally, follow these steps:
+
+1. Clone the repository: `git clone https://github.com/MParvin/Nginx-RTMP-Docker.git`
+
+2. Build the image: `docker build -t nginx-rtmp-server .`
+3. Run the image: `docker run -d -p 80:80 -p 1935:1935 --name rtmp-server nginx-rtmp-server`
+
+### Build alpine
+If you want to build the Docker image with Alpine Linux, instead of step 2, run:
+
+```
+docker build -t nginx-rtmp-server-alpine -f Dockerfile.alpine .
+```
+
 ## Docker Compose
 
 You can also use Docker Compose to run the server. Here’s an example docker-compose.yml file:
