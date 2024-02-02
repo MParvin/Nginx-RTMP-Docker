@@ -1,0 +1,30 @@
+FROM alpine:3.14
+
+RUN apk add --no-cache \
+    build-base \
+    git \
+    pcre-dev \
+    openssl-dev \
+    zlib-dev \
+    wget \
+    php7-fpm
+
+WORKDIR /src/
+
+RUN git clone https://github.com/arut/nginx-rtmp-module.git && \
+    git clone https://github.com/nginx/nginx.git
+
+WORKDIR /src/nginx
+RUN ./auto/configure --add-module=../nginx-rtmp-module && \
+    make && \
+    make install
+
+COPY ./nginx_rtmp_hls.conf /usr/local/nginx/conf/nginx.conf
+
+RUN mkdir -p /opt/data/hls
+
+EXPOSE 1935 80
+RUN adduser -D -H nginx
+USER nginx
+
+ENTRYPOINT ["/usr/local/nginx/sbin/nginx"]
