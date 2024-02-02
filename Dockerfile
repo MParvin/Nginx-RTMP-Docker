@@ -1,7 +1,5 @@
 FROM ubuntu:18.04
 
-RUN ln -snf /usr/share/zoneinfo/GMT /etc/localtime && echo GMT > /etc/timezone
-
 RUN apt update && apt install -y build-essential git php7.2-fpm libpcre3-dev libssl-dev zlib1g-dev wget
 
 RUN mkdir /src/
@@ -22,5 +20,7 @@ COPY ./nginx_rtmp_hls.conf /usr/local/nginx/conf/nginx.conf
 RUN mkdir -p /opt/data/hls
 
 EXPOSE 1935 80
+RUN adduser -D -H nginx
+USER nginx
 
 ENTRYPOINT ["/usr/local/nginx/sbin/nginx"]
