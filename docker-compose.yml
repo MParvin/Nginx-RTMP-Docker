@@ -1,6 +1,10 @@
 version: '3.3'
 services:
     nginx-rtmp-server:
+        build:
+            context: .
+            dockerfile: Dockerfile_alpine
+        restart: always
         ports:
             - '80:80'
             - '1935:1935'
