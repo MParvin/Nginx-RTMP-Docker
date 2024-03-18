@@ -1,5 +1,7 @@
 FROM alpine:3.14
 
+ENV DEBIAN_FRONTEND=noninteractive
+
 RUN apk add --no-cache \
     build-base \
     git \
@@ -18,8 +20,6 @@ WORKDIR /src/nginx
 RUN ./auto/configure --add-module=../nginx-rtmp-module && \
     make && \
     make install
-
-COPY ./nginx_rtmp_hls.conf /usr/local/nginx/conf/nginx.conf
 
 RUN mkdir -p /opt/data/hls
 
