@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ master ]
 
+env:
+  IMAGE_NAME: mparvin/nginx-rtmp-server:latest
+
 jobs:
 
   build:
@@ -15,7 +18,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag mparvin/nginx-rtmp-server:latest
+      run: docker build --tag ${{ env.IMAGE_NAME }} .
 
     - name: Login to DockerHub
       uses: docker/login-action@v1 
@@ -27,4 +30,4 @@ jobs:
       uses: docker/build-push-action@v2
       with:
         push: true
-        tags: mparvin/nginx-rtmp-server:latest
+        tags: ${{ env.IMAGE_NAME}
