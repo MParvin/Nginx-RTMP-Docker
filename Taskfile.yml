@@ -1,0 +1,79 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+# https://taskfile.dev
+
+version: "3"
+
+vars:
+  IMAGE: '{{.IMAGE | default "mparvin/nginx-rtmp-server"}}'
+  TAG: '{{.TAG | default "latest"}}'
+  IMAGE_TAG: "{{.IMAGE}}:{{.TAG}}"
+  TEST_TAG: '{{.TEST_TAG | default "mparvin/nginx-rtmp-server:test"}}'
+  SERVER: '{{.SERVER | default "devmad"}}'
+  DEP_PATH: '{{.DEP_PATH | default "/opt/src/nginx-rtmp-docker"}}'
+  COMPOSE_FILE: '{{.COMPOSE_FILE | default "docker-compose.yml"}}'
+
+tasks:
+  default:
+    desc: Show available tasks
+    cmds:
+      - task --list
+
+  lint:
+    desc: Lint Dockerfile, shell scripts, and YAML
+    cmds:
+      - hadolint Dockerfile
+      - shellcheck docker-entrypoint.sh test/smoke.sh
+      - |
+        yamllint -d '{extends: default, rules: {line-length: {max: 120}, truthy: disable, document-start: disable}}' \
+          docker-compose.yml Taskfile.yml .github/workflows/docker-build.yml
+
+  test:
+    desc: Build a local test image and run smoke tests
+    cmds:
+      - docker build -t "{{.TEST_TAG}}" .
+      - IMAGE_TAG="{{.TEST_TAG}}" ./test/smoke.sh
+
+  build:
+    desc: Build the Docker image locally
+    cmds:
+      - docker build -t "{{.IMAGE_TAG}}" .
+
+  push:
+    desc: Push the Docker image to the registry
+    deps: [build]
+    cmds:
+      - docker push "{{.IMAGE_TAG}}"
+
+  deploy:
+    desc: Sync project to {{.SERVER}} and build/up with docker compose
+    cmds:
+      - ssh "{{.SERVER}}" "mkdir -p {{.DEP_PATH}}"
+      - |
+        rsync -avz --delete \
+          --exclude '.git' \
+          --exclude '.env' \
+          --exclude '.DS_Store' \
+          --exclude '*.swp' \
+          ./ "{{.SERVER}}:{{.DEP_PATH}}/"
+      - ssh "{{.SERVER}}" "cd {{.DEP_PATH}} && docker compose -f {{.COMPOSE_FILE}} up -d --build"
+      - ssh "{{.SERVER}}" "cd {{.DEP_PATH}} && docker compose -f {{.COMPOSE_FILE}} ps"
+      - ssh "{{.SERVER}}" "cd {{.DEP_PATH}} && docker compose -f {{.COMPOSE_FILE}} logs --tail=20"
+
+  release:
+    desc: Run lint, test, build, push, then deploy
+    cmds:
+      - task: lint
+      - task: test
+      - task: build
+      - task: push
+      - task: deploy
+
+  logs:
+    desc: Tail remote compose logs
+    cmds:
+      - ssh "{{.SERVER}}" "cd {{.DEP_PATH}} && docker compose -f {{.COMPOSE_FILE}} logs -f --tail=100"
+
+  status:
+    desc: Show remote compose status
+    cmds:
+      - ssh "{{.SERVER}}" "cd {{.DEP_PATH}} && docker compose -f {{.COMPOSE_FILE}} ps"
