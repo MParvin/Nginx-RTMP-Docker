@@ -1,0 +1,12 @@
+.git
+.github
+.gitignore
+*.md
+LICENSE
+test
+examples
+*.swp
+*~
+.DS_Store
+.env
+.env.*

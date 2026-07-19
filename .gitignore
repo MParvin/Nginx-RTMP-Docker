@@ -1,0 +1,13 @@
+.env
+.env.*
+!.env.example
+*.log
+*.swp
+*~
+.DS_Store
+.idea/
+.vscode/
+hls-data/
+opt/
+*.tar
+*.tar.gz

@@ -1,0 +1,49 @@
+# Standalone example: RTMP + HLS behind Caddy (HTTPS).
+# From the repository root:
+#   export PUBLISH_SECRET='your-strong-secret'
+#   docker compose -f examples/docker-compose.https.yml up -d --build
+#
+# Edit examples/Caddyfile before first run.
+
+services:
+  nginx-rtmp-server:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    image: mparvin/nginx-rtmp-server:latest
+    container_name: rtmp-server
+    restart: unless-stopped
+    environment:
+      PUBLISH_SECRET: ${PUBLISH_SECRET:-changeme}
+      CORS_ORIGIN: ${CORS_ORIGIN:-https://stream.example.com}
+    volumes:
+      - hls-data:/opt/data
+    ports:
+      - "1935:1935"
+    expose:
+      - "8080"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  caddy:
+    image: caddy:2.9-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      nginx-rtmp-server:
+        condition: service_healthy
+
+volumes:
+  hls-data:
+  caddy-data:
+  caddy-config:

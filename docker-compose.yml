@@ -1,14 +1,29 @@
-version: '3.3'
 services:
-    nginx-rtmp-server:
-        build:
-            context: .
-            dockerfile: Dockerfile_alpine
-        restart: always
-        ports:
-            - '80:80'
-            - '1935:1935'
-        container_name: rtmp-server
-        volumes:
-            - './nginx_rtmp_hls.conf:/usr/local/nginx/conf/nginx.conf'
-        image: 'mparvin/nginx-rtmp-server:latest'
+  nginx-rtmp-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: mparvin/nginx-rtmp-server:latest
+    container_name: rtmp-server
+    restart: unless-stopped
+    ports:
+      # Host 80 -> container 8080 (unprivileged listen)
+      - "80:8080"
+      - "1935:1935"
+    environment:
+      PUBLISH_SECRET: ${PUBLISH_SECRET:-changeme}
+      CORS_ORIGIN: ${CORS_ORIGIN:-*}
+      # NGINX_CONF_TEMPLATE: /usr/local/nginx/conf/templates/nginx.production.conf.template
+    volumes:
+      - hls-data:/opt/data
+      # Optional: override the config template (still processed by envsubst)
+      # - ./nginx_rtmp_hls.conf:/usr/local/nginx/conf/templates/nginx.conf.template:ro
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  hls-data:

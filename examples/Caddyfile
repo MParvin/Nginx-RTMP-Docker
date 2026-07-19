@@ -1,0 +1,8 @@
+# Example TLS termination in front of nginx-rtmp HTTP (HLS).
+# Point DNS for stream.example.com at this host, then:
+#   caddy run --config examples/Caddyfile
+
+stream.example.com {
+	encode gzip
+	reverse_proxy rtmp-server:8080
+}
